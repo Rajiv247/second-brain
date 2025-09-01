@@ -1,0 +1,19 @@
+  <div className='flex gap-4'>
+          
+            <Card 
+          type="twitter" 
+          link="https://x.com/elonmusk/status/1748610972630434041" 
+          title="First tweet" 
+        />
+            <Card 
+          type="youtube" 
+           link="https://www.youtube.com/watch?v=apGV9Kg7ics&list=PL9gnSGHSqcnr_DxHsP7AW9ftq0AtAyYqJ&index=4" 
+          link="https://www.youtube.com/watch?v=3xQ80DOkN1A&list=PLp0O7XYf7Utrc3-vVwzV2etjN8puao4q0&index=5
+"
+          title="First video" />
+
+         </div>      
+
+
+
+         //https://x.com/elonmusk/status/1748610972630434041   

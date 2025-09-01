@@ -1,0 +1,184 @@
+🌀 Step 1: Component Function Starts
+
+When React renders <Dashbord />:
+
+export function Dashbord() {
+  const [modelOpen ,setModelOpen] = useState(false); 
+  const {contents , refresh} = useContent();
+
+
+useState(false)
+
+Creates a state variable modelOpen with initial value false.
+
+setModelOpen is the function to update it.
+
+useContent() runs (hook runs immediately during render).
+
+Inside useContent:
+
+useState([]) → sets contents = [] initially.
+
+Defines refresh function (doesn’t execute yet).
+
+Registers its useEffect (to run after render).
+
+So after this line, you have:
+
+modelOpen = false
+
+contents = []
+
+refresh = function that fetches data
+
+🌀 Step 2: useEffect in Dashbord registers
+useEffect(() =>{
+  refresh();
+}, [modelOpen])
+
+
+This tells React:
+“After the component renders, run refresh() once. Then, run it again whenever modelOpen changes.”
+
+At this moment, it does not run yet — only after the render completes.
+
+🌀 Step 3: JSX Render
+
+React now builds the UI tree from your return:
+
+return (
+  <div className="m-4">
+    <Sidebar/>
+    <div className="ml-72">
+      <CreateContentModel open={modelOpen} onClose={() => setModelOpen(false)} />
+      <div className="flex justify-end gap-4 ml-72">
+        <Button onClick={() => setModelOpen(true)} ... text="share"/>
+        <Button ... text="Add content"/>
+      </div>
+      <div className='flex gap-4 flex-wrap'>
+        {contents.map(...)}   // but contents = [] now, so nothing renders
+      </div>
+    </div>
+  </div>
+)
+
+
+Sidebar, CreateContentModel, and Buttons are shown.
+
+contents.map(...) → nothing yet, since contents is empty.
+
+🌀 Step 4: Side Effects Run (after first paint)
+4.1 useEffect from useContent
+useEffect(() => {
+  refresh();
+  let interval = setInterval(() => refresh(), 10000);
+  return () => clearInterval(interval);
+}, [])
+
+
+Runs right after first render.
+
+Calls refresh() immediately → makes an API call to backend.
+
+Starts a 10s interval to call refresh() repeatedly.
+
+4.2 useEffect from Dashbord
+useEffect(() => {
+  refresh();
+}, [modelOpen])
+
+
+Also runs right after first render (because every effect runs once after mount).
+
+Calls refresh() again.
+
+⚡ This means your first mount triggers two API calls (one from useContent, one from Dashbord).
+
+🌀 Step 5: API Response Arrives
+
+Inside refresh():
+
+axios.get(`${BACKEND_URL}/api/v1/content`, { headers: {...} })
+  .then(response => setContents(response.data.content))
+
+
+When data arrives from backend, setContents updates state.
+
+That triggers React to re-render Dashbord with new contents.
+
+🌀 Step 6: Re-render with Updated State
+
+Now contents is no longer [], it has the content objects.
+So in JSX:
+
+{contents.map(({type, link, title}) => (
+  <Card type={type} link={link} title={title}/>
+))}
+
+
+Cards get displayed with the actual content.
+
+🌀 Step 7: Later User Interaction
+
+If user clicks Share button → setModelOpen(true)
+
+React re-renders with modelOpen = true.
+
+Modal opens (CreateContentModel has open=true).
+
+After render, the useEffect([modelOpen]) in Dashbord runs → calls refresh() again.
+
+If modal closes (setModelOpen(false)) → same effect, another refresh.
+
+📌 Final Flow Summary
+
+Dashbord renders → initializes state and calls useContent.
+
+JSX renders with contents = [].
+
+After render:
+
+useContent’s useEffect runs → fetch + interval.
+
+Dashbord’s useEffect runs → fetch again.
+
+Data arrives → setContents → re-render with data.
+
+Every 10s, refresh() auto fetches.
+
+Opening/closing modal also triggers fetch.
+
+👉 So yes, useContent runs during render, and both useEffects (inside useContent and Dashbord) trigger API calls after render.
+
+Do you want me to also show you how to avoid the duplicate API call on mount (since right now it’s fetching twice initially)?
+
+
+
+
+
+
+                                               // IMP 
+                       In React:
+
+First → React runs the component function (Dashbord in your case).
+
+This builds the UI tree (JSX → virtual DOM).
+
+Then → React paints it on screen.
+
+After that → useEffect runs.
+
+👉 That’s why we say:
+useEffect runs after the first render (mount), not during render.
+
+So in your case:
+
+Dashbord() runs → React sees useEffect(() => { refresh(); }, [modelOpen]).
+
+It schedules that effect to run after the paint.
+
+Once the UI is visible, React runs refresh().
+
+That makes the API call, updates contents, and re-renders.
+
+Would you like me to make a small timeline diagram showing exactly what happens step by step in your Dashbord?                        
